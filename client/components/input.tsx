@@ -32,40 +32,41 @@ export function PromptInputWithActions() {
    */
 
   const handleSubmit = async () => {
-    if (!input.trim() && files.length === 0) return
+    if (!input.trim() && files.length === 0) return;
   
-    setIsLoading(true)
+    setIsLoading(true);
   
     try {
-      let formData = new FormData()
-      if (input.trim()) formData.append("text", input)
-      if (files.length > 0) formData.append("file", files[0]) // just first file
+      const payload = {
+        text: input.trim()
+      };
   
-      const response = await fetch("http://localhost:8000/generate", {
+      const response = await fetch("http://localhost:7000/graph/json", {
         method: "POST",
-        body: formData,
         headers: {
-          'Accept': 'text/html',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        body: JSON.stringify(payload),
         credentials: 'include',
-      })
-
+      });
+  
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Server responded with:', response.status, errorText)
-        throw new Error(`Request failed with status ${response.status}`)
+        const errorText = await response.text();
+        console.error('Server responded with:', response.status, errorText);
+        throw new Error(`Request failed with status ${response.status}`);
       }
   
-      const html = await response.text()
-      console.log('Received HTML response:', html.substring(0, 100) + '...')
-      setGraphHtml(html)
-      setInput("")
-      setFiles([])
+      const graphData = await response.json();
+      console.log('Received graph data:', graphData);
+      // Process the graph data as needed
+      // For example: setGraphData(graphData);
+      setInput("");
+      setFiles([]);
     } catch (err) {
-      console.error("Failed to generate graph:", err)
-      // You might want to show an error message to the user here
+      console.error("Failed to generate graph:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -98,14 +99,18 @@ export function PromptInputWithActions() {
       onValueChange={setInput}
       isLoading={isLoading}
       onSubmit={handleSubmit}
-      className="w-full max-w-(--breakpoint-md)"
+      className="
+                 bg-[#D0CDC9] 
+                 w-full max-w-[960px] h-[135px] mb-[12px]
+                 flex flex-col justify-between 
+                 border border-black border-[1.6px]"
     >
       {files.length > 0 && (
         <div className="flex flex-wrap gap-2 pb-2">
           {files.map((file, index) => (
             <div
               key={index}
-              className="bg-secondary flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+              className="bg-secondary flex items-center gap-2 rounded-[860px] px-3 py-2 text-sm"
             >
               <Paperclip className="size-4" />
               <span className="max-w-[120px] truncate">{file.name}</span>
@@ -120,32 +125,38 @@ export function PromptInputWithActions() {
         </div>
       )}
 
-      <PromptInputTextarea placeholder="Ask me anything..." />
-      <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
-        <div className="relative">
+      <PromptInputTextarea 
+        className="flex-1 text-lg placeholder:text-lg placeholder:text-black placeholder:opacity-70 [&>textarea]:text-lg [&>textarea]:leading-6" 
+        placeholder="Paste X profile link here..."
+      />
+      <PromptInputActions className="flex items-center justify-between gap-2">
+        <div className="relative rounded-full w-[140px] h-[48px] ml-1 flex items-center justify-center gap-2 px-4 bg-[#D0CDC9] text-black border border-black border-[1.6px] transition-colors cursor-pointer">
           <label
             htmlFor="file-upload"
-            className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
-            title="Attach files"
+            className="flex items-center justify-center gap-2 cursor-pointer"
+            title="X Profile"
           >
             <input
               type="file"
               multiple
               onChange={handleFileChange}
-              className="hidden"
+              className="hidden flex items-center"
               id="file-upload"
             />
-            <Paperclip className="text-primary size-5" />
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
           </label>
         </div>
 
         <Button
           variant="default"
           size="icon"
-          className="h-8 w-8 rounded-full"
+          className="rounded-full w-[140px] h-[48px]"
           onClick={handleSubmit}
           title={isLoading ? "Stop generation" : "Send message"}
         >
+          <span className="font-medium text-[18px]">Analyze</span>
           {isLoading ? (
             <Square className="size-5 fill-current" />
           ) : (
